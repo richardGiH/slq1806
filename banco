@@ -1,0 +1,131 @@
+create database union_subquery;
+USE union_subquery;
+
+create table Cliente
+(cod_cli int not null primary key,
+Nome_cli varchar(45),
+sexo_cli char(1),
+Salario_cli decimal(10,2),
+constraint sexo check (sexo_cli in ('F','M')));
+
+Create table Professor
+(cod_prof int not null primary key,
+Nome_prof varchar(45),
+salario_prof decimal(10,2));
+
+Create table Aluno
+(cod_aluno int not null primary key,
+Nome_aluno varchar(45),
+sexo_aluno char(1),
+constraint sexo1 check (sexo_aluno in ('F','M')));
+
+insert into aluno values
+(1,'Luis Nunes', 'M'),
+(2,'Sandra Silva','F'),
+(3,'Celina Lima', 'F');
+
+insert into cliente values
+(1,'Abigail Costa','F',1200.00),
+(2,'Bianca Souza','F',133.30),
+(3,'Denize Ruiz','F',2100.10),
+(4,'Fatima de Castro','F',1250.25),
+(5,'Marisa Alves','F',2125.20);
+
+insert into Professor values
+(1,'Fábio Souza',2100.20),
+(2,'Rafael Estoril',2500.30),
+(3,'Mariana Fuentes',1230.20),
+(4,'Samanta Pires',1400.10),
+(5,'Vitor Arruda',2100.25),
+(6,'Carlos Marino',1200.50);
+
+create table Cargo
+(cod_cargo int not null primary key,
+nome_cargo varchar(45),
+constraint Un_cargo unique (nome_cargo));
+
+insert into cargo Values
+(1,'Presidente'),
+(2,'Gerente'),
+(3,'Supervisor'),
+(4,'Revisor'),
+(5,'Redator');
+
+create table Funcionario
+(cod_fun int not null primary key,
+cod_cargo int,
+Nome_func varchar(45),
+Salario_func decimal(10,2),
+constraint fk_func foreign key (cod_cargo) references cargo (cod_cargo));
+
+insert into funcionario values
+(1,5,'Luis Pereira',3000.00),
+(2,5,'Antonio Almeida',3000.00),
+(3,3,'Donizete Ribeiro',2800.00),
+(4,3,'Gabriela Moura',4700.00),
+(5,2,'Emilio Duarte', 5000.00),
+(6,1,'Caroline Ferreira',9000.00);
+
+create table dependente
+(cod_dep int not null primary key,
+cod_fun int,
+nome_dep varchar(45),
+constraint fk_dep1 foreign key (cod_fun) references funcionario (cod_fun));
+
+insert into dependente values
+(1,1,'Mariana Pereira'),
+(2,1,'Camila Pereira'),
+(3,2,'Josival Pereira'),
+(4,2,'Clovis Almeida'),
+(5,2,'Durval Almeida'),
+(6,5,'Fabiana Duarte'),
+(7,5,'Joana Duarte');
+
+Select cod_cli as Cod_pes,
+'Cliente' as Tipo_pes, nome_cli as Nome_pes, Sexo_cli as Sexo_pes, Salario_cli as Salario_pes from Cliente 
+union all
+Select cod_prof, 'Professor', Nome_prof,'ND', Salario_prof from Professor 
+union all
+select cod_aluno, 'Aluno', nome_aluno, sexo_aluno , NULL from Aluno;
+
+Select * from Cargo
+where nome_cargo in (select nome_cargo from funcionario)
+order by nome_cargo;
+
+Select * from Cargo
+where cod_cargo iN
+(select cod_cargo from funcionario
+where cod_fun IN
+(select cod_fun from dependente
+where nome_dep IN
+(select nome_dep from dependente)));
+
+/*EX : SubQuery com sinalização '='
+Select * from funcionario
+where salario_func = (Select max (Salario_func) from funcionario);
+Select * from funcionario
+where salario_func = (Select min(salario_func) from funcionario);*/
+
+/*Select * from funcionario
+where salario_func = (Select min(salario_func) from funcionario where cod_fun IN
+(select cod_fun from dependente
+where nome_dep IN
+(select nome_dep from dependente)));*/
+
+/*EX6*/
+Select *,
+(Select Count(*) from dependente
+where cod_fun = funcionario.cod_fun) as Qtd_dep
+from funcionario;
+
+/*SUBquery com UPDATE*/
+UPDATE funcionario
+
+set salario_func = salario_func *1.1
+where cod_fun not in (select cod_fun from dependente);
+select * from funcionario;
+
+/*DELETE com Subquery*/
+DELETE from funcionario
+where cod_fun not in (select cod_fun from dependente);
+select * from funcionario;
